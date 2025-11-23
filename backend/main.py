@@ -1,15 +1,7 @@
-from spotify_client import get_token
+from spotify_client import get_artist_info
+import json
 
-token = get_token()
-print("Access token:", token)
+artist_name = "Yo Yo Honey Singh"
+info = get_artist_info(artist_name, album_limit=10)
 
-
-# Calling the artist search feature
-from spotify_client import search_artist
-
-artist_name = "Honey Singh"
-artist = search_artist(artist_name)
-
-print("Artist found:")
-print(artist)
-print("Hello")
+print(json.dumps(info, indent=2, ensure_ascii=False))
