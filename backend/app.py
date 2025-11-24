@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from spotify_client import search_artists, get_artist_info_by_id, get_album_tracks, get_artist_top_tracks
+from .spotify_client import search_artists, get_artist_info_by_id, get_album_tracks, get_artist_top_tracks
 
 
 
