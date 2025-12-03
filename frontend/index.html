@@ -3,897 +3,485 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Discover your favorite artists and their music with Spotify Artist Explorer">
-  <title>Spotify Artist Explorer</title>
+  <title>Spotify Artist Comparison Cards</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <style>
-    /* ==========================================================================
-       Reset & Base Styles
-       ========================================================================== */
-    *,
-    *::before,
-    *::after {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+    /* Scoped styles for Artist Comparison feature */
+    .acc-card {
+      background: linear-gradient(145deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      border: 2px solid transparent;
+      background-clip: padding-box;
+      position: relative;
     }
-
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
-      padding: 20px;
-      color: #333;
-      transition: background 0.6s ease;
-    }
-
-    body::before {
+    .acc-card::before {
       content: '';
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: 
-        radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-        radial-gradient(circle at 80% 80%, rgba(138, 43, 226, 0.3) 0%, transparent 50%);
-      pointer-events: none;
-      z-index: 0;
-      transition: opacity 0.6s ease;
-    }
-
-    /* ==========================================================================
-       Layout & Container
-       ========================================================================== */
-    .container {
-      max-width: 1000px;
-      margin: 0 auto;
-      position: relative;
-      z-index: 1;
-      transition: filter 0.3s ease;
-    }
-
-    .container.blurred {
-      filter: blur(8px);
-      pointer-events: none;
-    }
-
-    /* ==========================================================================
-       Header Section
-       ========================================================================== */
-    .header {
-      text-align: center;
-      margin-bottom: 40px;
-      animation: fadeInDown 0.6s ease;
-    }
-
-    .header h1 {
-      font-size: 3em;
-      color: white;
-      text-shadow: 2px 2px 20px rgba(0, 0, 0, 0.3);
-      margin-bottom: 10px;
-      font-weight: 700;
-    }
-
-    .header p {
-      color: rgba(255, 255, 255, 0.9);
-      font-size: 1.1em;
-    }
-
-    /* ==========================================================================
-       Search Card & Input
-       ========================================================================== */
-    .search-card {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
-      border-radius: 20px;
-      padding: 30px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-      margin-bottom: 30px;
-      animation: fadeInUp 0.6s ease;
-    }
-
-    .search-wrapper {
-      position: relative;
-    }
-
-    .search-box {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-    }
-
-    .search-input {
-      flex: 1;
-      padding: 16px 20px;
-      font-size: 16px;
-      border: 2px solid #e0e0e0;
-      border-radius: 12px;
-      outline: none;
-      transition: border-color 0.3s ease, box-shadow 0.3s ease;
-      background: white;
-    }
-
-    .search-input:focus {
-      border-color: #667eea;
-      box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
-    }
-
-    /* ==========================================================================
-       Suggestions Dropdown
-       ========================================================================== */
-    .suggestions {
       position: absolute;
-      top: 100%;
-      left: 0;
-      right: 0;
-      background: white;
-      border-radius: 12px;
-      margin-top: 8px;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-      max-height: 400px;
-      overflow-y: auto;
-      z-index: 100;
-      display: none;
-      animation: fadeIn 0.3s ease;
+      inset: -2px;
+      background: linear-gradient(145deg, #e94560, #ff6b6b, #ffd93d, #6bcb77);
+      border-radius: inherit;
+      z-index: -1;
+      opacity: 0.8;
     }
-
-    .suggestions[aria-hidden="false"] {
-      display: block;
+    .acc-card:hover::before {
+      opacity: 1;
+      animation: acc-border-glow 2s linear infinite;
     }
-
-    .suggestions::-webkit-scrollbar {
-      width: 8px;
+    @keyframes acc-border-glow {
+      0%, 100% { filter: hue-rotate(0deg); }
+      50% { filter: hue-rotate(30deg); }
     }
-
-    .suggestions::-webkit-scrollbar-track {
-      background: #f1f1f1;
-      border-radius: 10px;
+    .acc-card-image {
+      border: 3px solid rgba(255,255,255,0.2);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
     }
-
-    .suggestions::-webkit-scrollbar-thumb {
-      background: #667eea;
-      border-radius: 10px;
+    .acc-popularity-bar {
+      background: linear-gradient(90deg, #e94560, #ffd93d, #6bcb77);
     }
-
-    .suggestion-item {
-      padding: 12px 16px;
-      cursor: pointer;
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      transition: background 0.2s ease, transform 0.2s ease;
-      border-bottom: 1px solid #f0f0f0;
+    .acc-stat-label {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #9ca3af;
     }
-
-    .suggestion-item:last-child {
-      border-bottom: none;
-    }
-
-    .suggestion-item:hover,
-    .suggestion-item:focus {
-      background: linear-gradient(90deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-      transform: translateX(4px);
-      outline: none;
-    }
-
-    .suggestion-item img {
-      width: 50px;
-      height: 50px;
-      border-radius: 8px;
-      object-fit: cover;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    .suggestion-info {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .suggestion-info strong {
-      display: block;
-      color: #333;
-      margin-bottom: 4px;
-      font-size: 15px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .suggestion-info small {
-      color: #666;
-      font-size: 13px;
-    }
-
-    /* ==========================================================================
-       Results Section
-       ========================================================================== */
-    #results {
-      animation: fadeIn 0.5s ease;
-    }
-
-    /* ==========================================================================
-       Artist Header Card
-       ========================================================================== */
-    .artist-header {
-      background: white;
-      border-radius: 20px;
-      padding: 30px;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-      margin-bottom: 30px;
-      animation: fadeInUp 0.6s ease;
-    }
-
-    .artist-main {
-      display: flex;
-      gap: 24px;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-
-    .artist-image {
-      width: 140px;
-      height: 140px;
-      border-radius: 50%;
-      object-fit: cover;
-      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
-      border: 4px solid white;
-    }
-
-    .artist-info h3 {
-      font-size: 2em;
-      color: #333;
-      margin-bottom: 12px;
+    .acc-stat-value {
       font-weight: 700;
+      font-size: 1.1rem;
+      color: #fff;
     }
-
-    .artist-stats {
-      display: flex;
-      gap: 24px;
-      flex-wrap: wrap;
+    .acc-approximate {
+      border-color: #f59e0b !important;
     }
-
-    .stat-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 16px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border-radius: 20px;
-      font-size: 14px;
-      font-weight: 500;
-      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    .acc-approximate::before {
+      background: linear-gradient(145deg, #f59e0b, #d97706) !important;
     }
-
-    .stat-icon {
-      font-size: 16px;
+    .acc-tray::-webkit-scrollbar {
+      height: 8px;
     }
-
-    .genres {
-      margin-top: 12px;
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
+    .acc-tray::-webkit-scrollbar-track {
+      background: #1f2937;
+      border-radius: 4px;
     }
-
-    .genre-tag {
-      padding: 6px 14px;
-      background: #f0f0f0;
-      border-radius: 16px;
-      font-size: 13px;
-      color: #666;
+    .acc-tray::-webkit-scrollbar-thumb {
+      background: #4b5563;
+      border-radius: 4px;
     }
-
-    /* ==========================================================================
-       Section Titles
-       ========================================================================== */
-    .section-title {
-      font-size: 1.5em;
-      color: white;
-      margin: 30px 0 20px 0;
-      font-weight: 600;
-      text-shadow: 1px 1px 10px rgba(0, 0, 0, 0.2);
+    .acc-tray::-webkit-scrollbar-thumb:hover {
+      background: #6b7280;
     }
-
-    /* ==========================================================================
-       Top Tracks Section
-       ========================================================================== */
-    .top-tracks {
-      background: white;
-      border-radius: 16px;
-      padding: 24px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-      margin-bottom: 30px;
+    .acc-skeleton {
+      background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
+      background-size: 200% 100%;
+      animation: acc-shimmer 1.5s infinite;
     }
-
-    .top-tracks h4 {
-      color: #333;
-      margin-bottom: 16px;
-      font-size: 1.3em;
+    @keyframes acc-shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
     }
-
-    .top-tracks ol {
-      list-style: none;
-      counter-reset: track-counter;
+    .acc-search-result:hover {
+      background: rgba(233, 69, 96, 0.1);
     }
-
-    .top-tracks li {
-      counter-increment: track-counter;
-      padding: 12px;
-      border-radius: 8px;
-      margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      transition: background 0.2s ease, transform 0.2s ease;
+    .acc-btn-primary {
+      background: linear-gradient(135deg, #e94560, #ff6b6b);
+      transition: all 0.2s;
     }
-
-    .top-tracks li:hover {
-      background: #f8f8f8;
-      transform: translateX(4px);
+    .acc-btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(233, 69, 96, 0.4);
     }
-
-    .top-tracks li::before {
-      content: counter(track-counter);
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 600;
-      font-size: 14px;
-      flex-shrink: 0;
+    .acc-genre-tag {
+      background: rgba(107, 203, 119, 0.2);
+      color: #6bcb77;
+      font-size: 0.65rem;
+      padding: 2px 6px;
+      border-radius: 9999px;
     }
-
-    /* ==========================================================================
-       Albums Grid
-       ========================================================================== */
-    .albums-grid {
-      display: grid;
-      gap: 20px;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    .acc-loading-spinner {
+      border: 2px solid rgba(255,255,255,0.1);
+      border-top-color: #e94560;
+      animation: acc-spin 0.8s linear infinite;
     }
-
-    .album-card {
-      background: white;
-      border-radius: 16px;
-      padding: 20px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      animation: fadeInUp 0.6s ease;
-      cursor: pointer;
-      border: none;
-      text-align: left;
-      width: 100%;
-    }
-
-    .album-card:hover,
-    .album-card:focus {
-      transform: translateY(-4px);
-      box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15);
-      outline: none;
-    }
-
-    .album-header {
-      display: flex;
-      gap: 16px;
-      margin-bottom: 16px;
-    }
-
-    .album-image {
-      width: 80px;
-      height: 80px;
-      border-radius: 8px;
-      object-fit: cover;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-
-    .album-info {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .album-info strong {
-      display: block;
-      color: #333;
-      font-size: 16px;
-      margin-bottom: 6px;
-      line-height: 1.3;
-    }
-
-    .album-meta {
-      color: #666;
-      font-size: 13px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    /* ==========================================================================
-       Modal Styles
-       ========================================================================== */
-    .modal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.7);
-      backdrop-filter: blur(10px);
-      z-index: 1000;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      animation: fadeIn 0.3s ease;
-    }
-
-    .modal-overlay[aria-hidden="false"] {
-      display: flex;
-    }
-
-    .modal-content {
-      background: white;
-      border-radius: 24px;
-      max-width: 600px;
-      width: 100%;
-      max-height: 90vh;
-      overflow-y: auto;
-      box-shadow: 0 20px 80px rgba(0, 0, 0, 0.5);
-      animation: modalZoomIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      position: relative;
-    }
-
-    .modal-content::-webkit-scrollbar {
-      width: 8px;
-    }
-
-    .modal-content::-webkit-scrollbar-track {
-      background: #f1f1f1;
-      border-radius: 10px;
-    }
-
-    .modal-content::-webkit-scrollbar-thumb {
-      background: #667eea;
-      border-radius: 10px;
-    }
-
-    .modal-header {
-      padding: 30px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      border-radius: 24px 24px 0 0;
-      color: white;
-      position: relative;
-    }
-
-    .modal-close {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      background: rgba(255, 255, 255, 0.2);
-      border: none;
-      color: white;
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      font-size: 24px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.3s ease, transform 0.3s ease;
-      backdrop-filter: blur(10px);
-      line-height: 1;
-    }
-
-    .modal-close:hover,
-    .modal-close:focus {
-      background: rgba(255, 255, 255, 0.3);
-      transform: rotate(90deg);
-      outline: none;
-    }
-
-    .modal-album-info {
-      display: flex;
-      gap: 20px;
-      align-items: flex-start;
-    }
-
-    .modal-album-image {
-      width: 120px;
-      height: 120px;
-      border-radius: 12px;
-      object-fit: cover;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-    }
-
-    .modal-album-details h3 {
-      font-size: 1.8em;
-      margin-bottom: 12px;
-      font-weight: 700;
-    }
-
-    .modal-album-meta {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      font-size: 14px;
-      opacity: 0.95;
-    }
-
-    .modal-body {
-      padding: 30px;
-    }
-
-    .modal-tracks-title {
-      font-size: 1.3em;
-      color: #333;
-      margin-bottom: 20px;
-      font-weight: 600;
-    }
-
-    .modal-tracks-list {
-      list-style: none;
-      counter-reset: modal-track;
-    }
-
-    .modal-tracks-list li {
-      counter-increment: modal-track;
-      padding: 14px 16px;
-      border-radius: 10px;
-      margin-bottom: 8px;
-      transition: background 0.2s ease, transform 0.2s ease;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      background: #f8f8f8;
-    }
-
-    .modal-tracks-list li:hover {
-      background: linear-gradient(90deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-      transform: translateX(4px);
-    }
-
-    .modal-tracks-list li::before {
-      content: counter(modal-track);
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 600;
-      font-size: 14px;
-      flex-shrink: 0;
-    }
-
-    .track-name {
-      flex: 1;
-      font-weight: 500;
-      color: #333;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .track-duration {
-      color: #999;
-      font-size: 14px;
-      flex-shrink: 0;
-    }
-
-    /* ==========================================================================
-       Loading States
-       ========================================================================== */
-    .loading {
-      text-align: center;
-      padding: 40px;
-      color: white;
-      font-size: 18px;
-    }
-
-    .spinner {
-      border: 3px solid rgba(255, 255, 255, 0.3);
-      border-top: 3px solid white;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 16px;
-    }
-
-    .modal-loading {
-      text-align: center;
-      padding: 40px;
-      color: #999;
-    }
-
-    .modal-spinner {
-      border: 3px solid #f0f0f0;
-      border-top: 3px solid #667eea;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 16px;
-    }
-
-    /* ==========================================================================
-       Animations
-       ========================================================================== */
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    @keyframes fadeInDown {
-      from {
-        opacity: 0;
-        transform: translateY(-20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    @keyframes modalZoomIn {
-      from {
-        opacity: 0;
-        transform: scale(0.8) translateY(40px);
-      }
-      to {
-        opacity: 1;
-        transform: scale(1) translateY(0);
-      }
-    }
-
-    /* ==========================================================================
-       Responsive Styles
-       ========================================================================== */
-    @media (max-width: 768px) {
-      .header h1 {
-        font-size: 2em;
-      }
-
-      .search-card {
-        padding: 20px;
-      }
-
-      .artist-main {
-        flex-direction: column;
-        text-align: center;
-      }
-
-      .artist-stats {
-        justify-content: center;
-      }
-
-      .genres {
-        justify-content: center;
-      }
-
-      .albums-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .modal-album-info {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-      }
-
-      .modal-content {
-        max-height: 95vh;
-      }
+    @keyframes acc-spin {
+      to { transform: rotate(360deg); }
     }
   </style>
 </head>
-<body>
-  <div class="container" id="container">
-    <header class="header">
-      <h1>🎵 Spotify Artist Explorer</h1>
-      <p>Discover your favorite artists and their music</p>
+<body class="bg-gray-900 text-white min-h-screen">
+  <!--
+    ============================================================
+    ARTIST COMPARISON CARDS FEATURE
+    ============================================================
+    A WWE/trading-card style comparison tool for Spotify artists.
+    
+    PRODUCTION TOKEN FLOW (Recommended):
+    Instead of pasting tokens in the UI, set up a backend proxy:
+    
+    1. Create a server endpoint (e.g., /api/spotify-token) that:
+       - Uses Client Credentials Flow with your client_id + client_secret
+       - POST to https://accounts.spotify.com/api/token
+       - Returns { access_token, expires_in }
+    
+    2. Create proxy endpoints for Spotify API calls:
+       - /api/spotify/search?q=...
+       - /api/spotify/artist/:id
+       - /api/spotify/artist/:id/albums
+       - /api/spotify/album/:id/tracks
+    
+    3. Replace getToken() to fetch from your backend
+    4. Replace spotifyFetch() to use your proxy endpoints
+    
+    This keeps secrets server-side and handles token refresh automatically.
+    ============================================================
+  -->
+
+  <div id="acc-app" class="max-w-7xl mx-auto px-4 py-8">
+    <!-- Header -->
+    <header class="text-center mb-8">
+      <h1 class="text-4xl font-bold bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 bg-clip-text text-transparent mb-2">
+        🎵 Artist Comparison Cards
+      </h1>
+      <p class="text-gray-400">Compare your favorite Spotify artists side-by-side</p>
     </header>
 
-    <section class="search-card" aria-label="Search for artists">
-      <div class="search-wrapper">
-        <div class="search-box">
-          <label for="searchInput" class="visually-hidden" hidden>Search for an artist</label>
-          <input 
-            type="search" 
-            id="searchInput" 
-            class="search-input"
-            placeholder="Search for an artist..." 
-            autocomplete="off"
-            aria-autocomplete="list"
-            aria-controls="suggestions"
-            aria-expanded="false"
-          >
+    <!-- Error Banner -->
+    <div id="acc-error-banner" class="hidden bg-red-900/50 border border-red-500 rounded-lg p-4 mb-6" role="alert">
+      <div class="flex items-start gap-3">
+        <span class="text-red-400 text-xl">⚠️</span>
+        <div class="flex-1">
+          <h3 id="acc-error-title" class="font-semibold text-red-300">Error</h3>
+          <p id="acc-error-message" class="text-red-200 text-sm mt-1"></p>
+          <button id="acc-error-dismiss" class="mt-2 text-xs text-red-300 hover:text-white underline">Dismiss</button>
         </div>
-        <div 
-          id="suggestions" 
-          class="suggestions" 
-          role="listbox" 
-          aria-label="Artist suggestions"
-          aria-hidden="true"
-        ></div>
       </div>
-    </section>
+    </div>
 
-    <main id="results" role="region" aria-live="polite" aria-label="Search results"></main>
-  </div>
-
-  <!-- Modal for Album Details -->
-  <div 
-    id="albumModal" 
-    class="modal-overlay" 
-    role="dialog" 
-    aria-modal="true" 
-    aria-labelledby="modalAlbumName"
-    aria-hidden="true"
-  >
-    <div class="modal-content">
-      <div class="modal-header">
+    <!-- Token Input Section -->
+    <div class="bg-gray-800 rounded-lg p-4 mb-6">
+      <label for="acc-token-input" class="block text-sm font-medium text-gray-300 mb-2">
+        🔑 Spotify Access Token <span class="text-gray-500">(Development Only)</span>
+      </label>
+      <div class="flex gap-2">
+        <input 
+          type="password" 
+          id="acc-token-input" 
+          class="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+          placeholder="Paste Bearer token or just the token string..."
+          aria-describedby="acc-token-help"
+        >
         <button 
-          class="modal-close" 
-          id="modalCloseBtn"
-          aria-label="Close album details"
-          type="button"
-        >×</button>
-        <div class="modal-album-info">
-          <img 
-            id="modalAlbumImage" 
-            class="modal-album-image" 
-            src="" 
-            alt=""
-            loading="lazy"
-          >
-          <div class="modal-album-details">
-            <h3 id="modalAlbumName"></h3>
-            <div class="modal-album-meta">
-              <span id="modalAlbumDate"></span>
-              <span id="modalAlbumTracks"></span>
-            </div>
-          </div>
+          id="acc-token-save" 
+          class="acc-btn-primary px-4 py-2 rounded-lg font-medium"
+          aria-label="Save token"
+        >
+          Save
+        </button>
+      </div>
+      <p id="acc-token-help" class="text-xs text-gray-500 mt-2">
+        Get a token from <a href="https://developer.spotify.com/console/" target="_blank" rel="noopener" class="text-pink-400 hover:underline">Spotify Developer Console</a>. 
+        For production, use a backend proxy with Client Credentials flow.
+      </p>
+      <p id="acc-token-status" class="text-xs mt-1 hidden"></p>
+    </div>
+
+    <!-- Search Section -->
+    <div class="bg-gray-800 rounded-lg p-4 mb-6">
+      <label for="acc-search-input" class="block text-sm font-medium text-gray-300 mb-2">
+        🔍 Search Artists
+      </label>
+      <div class="flex gap-2 mb-4">
+        <input 
+          type="text" 
+          id="acc-search-input" 
+          class="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+          placeholder="Enter artist name..."
+          aria-label="Search for artists"
+        >
+        <button 
+          id="acc-search-btn" 
+          class="acc-btn-primary px-6 py-2 rounded-lg font-medium flex items-center gap-2"
+          aria-label="Search"
+        >
+          <span id="acc-search-icon">🔍</span>
+          <span class="hidden sm:inline">Search</span>
+        </button>
+      </div>
+      
+      <!-- Search Results -->
+      <div id="acc-search-results" class="hidden">
+        <h3 class="text-sm font-medium text-gray-400 mb-2">Search Results</h3>
+        <div id="acc-results-list" class="space-y-2 max-h-64 overflow-y-auto" role="list" aria-label="Search results">
         </div>
       </div>
-      <div class="modal-body">
-        <div id="modalTracksContent"></div>
+    </div>
+
+    <!-- Controls -->
+    <div class="flex flex-wrap items-center gap-4 mb-6">
+      <div class="flex items-center gap-2">
+        <label for="acc-sort-select" class="text-sm text-gray-400">Sort by:</label>
+        <select 
+          id="acc-sort-select" 
+          class="bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
+        >
+          <option value="followers">Followers</option>
+          <option value="popularity">Popularity</option>
+          <option value="albums">Albums</option>
+          <option value="songs">Songs</option>
+          <option value="ratio">Songs/Album</option>
+        </select>
+      </div>
+      <button 
+        id="acc-sort-btn" 
+        class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg font-medium transition-colors"
+      >
+        ↕️ Sort
+      </button>
+      <button 
+        id="acc-clear-btn" 
+        class="bg-gray-700 hover:bg-red-600 px-4 py-2 rounded-lg font-medium transition-colors"
+      >
+        🗑️ Clear All
+      </button>
+      <span id="acc-card-count" class="text-sm text-gray-500 ml-auto"></span>
+    </div>
+
+    <!-- Comparison Tray -->
+    <div 
+      id="acc-tray" 
+      class="acc-tray flex gap-4 overflow-x-auto pb-4 min-h-[400px]"
+      role="region"
+      aria-label="Artist comparison cards"
+    >
+      <div id="acc-empty-state" class="flex-1 flex flex-col items-center justify-center text-gray-500 py-12">
+        <span class="text-6xl mb-4">🎤</span>
+        <p class="text-lg">No artists added yet</p>
+        <p class="text-sm">Search and add artists to compare them</p>
       </div>
     </div>
   </div>
 
   <script>
+    /**
+     * ARTIST COMPARISON CARDS - Spotify Integration
+     * 
+     * This module provides a trading-card style comparison UI for Spotify artists.
+     * 
+     * SECURITY NOTES:
+     * - Never commit real tokens to source control
+     * - For production, implement a backend proxy (see comments at top of file)
+     * - Tokens from the Developer Console expire after 1 hour
+     * 
+     * RATE LIMITS:
+     * - Spotify allows ~180 requests per minute for most endpoints
+     * - This implementation uses concurrency limiting (max 3 parallel requests)
+     * - If you hit 429, wait for Retry-After header duration
+     */
+
     (function() {
       'use strict';
 
-      // ==========================================================================
-      // Constants & Configuration
-      // ==========================================================================
-      const API_BASE = 'https://artist-info.onrender.com';
-      const DEBOUNCE_DELAY = 350;
-      const MIN_SEARCH_LENGTH = 2;
-      const PLACEHOLDER_IMAGE = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Crect fill="%23ddd" width="100" height="100"/%3E%3C/svg%3E';
-      const DEFAULT_GRADIENT = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-
-      // ==========================================================================
-      // DOM Element Cache
-      // ==========================================================================
-      const elements = {
-        searchInput: document.getElementById('searchInput'),
-        suggestions: document.getElementById('suggestions'),
-        results: document.getElementById('results'),
-        container: document.getElementById('container'),
-        modal: document.getElementById('albumModal'),
-        modalCloseBtn: document.getElementById('modalCloseBtn'),
-        modalAlbumImage: document.getElementById('modalAlbumImage'),
-        modalAlbumName: document.getElementById('modalAlbumName'),
-        modalAlbumDate: document.getElementById('modalAlbumDate'),
-        modalAlbumTracks: document.getElementById('modalAlbumTracks'),
-        modalTracksContent: document.getElementById('modalTracksContent')
+      // ============================================================
+      // CONFIGURATION
+      // ============================================================
+      const CONFIG = {
+        SPOTIFY_API_BASE: 'https://api.spotify.com/v1',
+        MAX_CONCURRENT_REQUESTS: 3,
+        MAX_ALBUMS_FULL_FETCH: 200, // Beyond this, use summary mode
+        SUMMARY_MODE_ALBUM_LIMIT: 50, // Albums to fetch in summary mode
+        STORAGE_KEY_ARTISTS: 'acc_artist_ids',
+        STORAGE_KEY_TOKEN: 'acc_spotify_token',
+        STORAGE_KEY_SCROLL: 'acc_scroll_position'
       };
 
-      // ==========================================================================
-      // State Management
-      // ==========================================================================
-      let debounceTimer = null;
-      let currentAbortController = null;
+      // ============================================================
+      // STATE
+      // ============================================================
+      const state = {
+        token: null,
+        artistIds: [],
+        artistCache: new Map(), // In-memory cache for computed stats
+        isSearching: false,
+        pendingFetches: new Map() // Track ongoing fetches
+      };
 
-      // ==========================================================================
-      // Utility Functions
-      // ==========================================================================
-      
+      // ============================================================
+      // DOM ELEMENTS
+      // ============================================================
+      const elements = {
+        tokenInput: document.getElementById('acc-token-input'),
+        tokenSave: document.getElementById('acc-token-save'),
+        tokenStatus: document.getElementById('acc-token-status'),
+        searchInput: document.getElementById('acc-search-input'),
+        searchBtn: document.getElementById('acc-search-btn'),
+        searchIcon: document.getElementById('acc-search-icon'),
+        searchResults: document.getElementById('acc-search-results'),
+        resultsList: document.getElementById('acc-results-list'),
+        sortSelect: document.getElementById('acc-sort-select'),
+        sortBtn: document.getElementById('acc-sort-btn'),
+        clearBtn: document.getElementById('acc-clear-btn'),
+        cardCount: document.getElementById('acc-card-count'),
+        tray: document.getElementById('acc-tray'),
+        emptyState: document.getElementById('acc-empty-state'),
+        errorBanner: document.getElementById('acc-error-banner'),
+        errorTitle: document.getElementById('acc-error-title'),
+        errorMessage: document.getElementById('acc-error-message'),
+        errorDismiss: document.getElementById('acc-error-dismiss')
+      };
+
+      // ============================================================
+      // UTILITY FUNCTIONS
+      // ============================================================
+
       /**
-       * Debounce function execution
+       * Format large numbers with K/M suffix
        */
-      function debounce(func, delay) {
-        return function(...args) {
-          clearTimeout(debounceTimer);
-          debounceTimer = setTimeout(() => func.apply(this, args), delay);
+      function formatNumber(num) {
+        if (num >= 1000000) {
+          return (num / 1000000).toFixed(1) + 'M';
+        }
+        if (num >= 1000) {
+          return (num / 1000).toFixed(1) + 'K';
+        }
+        return num.toString();
+      }
+
+      /**
+       * Debounce function to limit rapid calls
+       */
+      function debounce(fn, delay) {
+        let timeoutId;
+        return (...args) => {
+          clearTimeout(timeoutId);
+          timeoutId = setTimeout(() => fn(...args), delay);
         };
       }
 
       /**
-       * Safely escape HTML to prevent XSS
+       * Concurrency-limited Promise.all
        */
-      function escapeHtml(text) {
-        if (!text) return '';
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-      }
-
-      /**
-       * Format duration from milliseconds to mm:ss
-       */
-      function formatDuration(ms) {
-        if (!ms || isNaN(ms)) return '0:00';
-        const minutes = Math.floor(ms / 60000);
-        const seconds = String(Math.floor((ms % 60000) / 1000)).padStart(2, '0');
-        return `${minutes}:${seconds}`;
-      }
-
-      /**
-       * Format number with locale string
-       */
-      function formatNumber(num) {
-        return num ? num.toLocaleString() : '0';
-      }
-
-      /**
-       * Get image URL or placeholder
-       */
-      function getImageUrl(url) {
-        return url && !url.includes('undefined') ? url : PLACEHOLDER_IMAGE;
-      }
-
-      /**
-       * Handle image load errors
-       */
-      function handleImageError(event) {
-        event.target.src = PLACEHOLDER_IMAGE;
-        event.target.alt = 'Image unavailable';
-      }
-
-      // ==========================================================================
-      // API Functions
-      // ==========================================================================
-
-      /**
-       * Fetch with abort controller support
-       */
-      async function fetchWithAbort(url) {
-        if (currentAbortController) {
-          currentAbortController.abort();
+      async function promiseAllLimit(tasks, limit) {
+        const results = [];
+        const executing = new Set();
+        
+        for (const task of tasks) {
+          const promise = Promise.resolve().then(() => task());
+          results.push(promise);
+          executing.add(promise);
+          
+          const cleanup = () => executing.delete(promise);
+          promise.then(cleanup, cleanup);
+          
+          if (executing.size >= limit) {
+            await Promise.race(executing);
+          }
         }
-        currentAbortController = new AbortController();
+        
+        return Promise.allSettled(results);
+      }
 
-        const response = await fetch(url, { signal: currentAbortController.signal });
+      // ============================================================
+      // ERROR HANDLING
+      // ============================================================
+
+      function showError(title, message) {
+        elements.errorTitle.textContent = title;
+        elements.errorMessage.innerHTML = message;
+        elements.errorBanner.classList.remove('hidden');
+        elements.errorBanner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+
+      function hideError() {
+        elements.errorBanner.classList.add('hidden');
+      }
+
+      // ============================================================
+      // TOKEN MANAGEMENT
+      // ============================================================
+
+      /**
+       * Get the current token
+       * 
+       * PRODUCTION NOTE: Replace this with a fetch to your backend:
+       * async function getToken() {
+       *   const res = await fetch('/api/spotify-token');
+       *   const { access_token } = await res.json();
+       *   return access_token;
+       * }
+       */
+      function getToken() {
+        return state.token;
+      }
+
+      function saveToken(token) {
+        // Clean up token - remove "Bearer " prefix if included
+        const cleanToken = token.replace(/^Bearer\s+/i, '').trim();
+        state.token = cleanToken;
+        localStorage.setItem(CONFIG.STORAGE_KEY_TOKEN, cleanToken);
+        updateTokenStatus(true);
+        hideError();
+      }
+
+      function loadToken() {
+        const stored = localStorage.getItem(CONFIG.STORAGE_KEY_TOKEN);
+        if (stored) {
+          state.token = stored;
+          elements.tokenInput.value = '••••••••••••••••';
+          updateTokenStatus(true);
+        }
+      }
+
+      function updateTokenStatus(valid) {
+        elements.tokenStatus.classList.remove('hidden');
+        if (valid) {
+          elements.tokenStatus.textContent = '✓ Token saved';
+          elements.tokenStatus.className = 'text-xs mt-1 text-green-400';
+        } else {
+          elements.tokenStatus.textContent = '✗ Invalid or expired token';
+          elements.tokenStatus.className = 'text-xs mt-1 text-red-400';
+        }
+      }
+
+      // ============================================================
+      // SPOTIFY API
+      // ============================================================
+
+      /**
+       * Make authenticated request to Spotify API
+       * 
+       * PRODUCTION NOTE: Replace with proxy calls:
+       * async function spotifyFetch(endpoint) {
+       *   const res = await fetch(`/api/spotify${endpoint}`);
+       *   return res.json();
+       * }
+       */
+      async function spotifyFetch(endpoint, retries = 2) {
+        const token = getToken();
+        if (!token) {
+          throw new Error('NO_TOKEN');
+        }
+
+        const url = endpoint.startsWith('http') 
+          ? endpoint 
+          : `${CONFIG.SPOTIFY_API_BASE}${endpoint}`;
+
+        const response = await fetch(url, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.status === 401) {
+          updateTokenStatus(false);
+          throw new Error('TOKEN_EXPIRED');
+        }
+
+        if (response.status === 429) {
+          const retryAfter = response.headers.get('Retry-After') || 30;
+          throw new Error(`RATE_LIMITED:${retryAfter}`);
+        }
+
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          throw new Error(`API_ERROR:${response.status}`);
         }
+
         return response.json();
       }
 
@@ -901,551 +489,728 @@
        * Search for artists
        */
       async function searchArtists(query) {
-        try {
-          const data = await fetchWithAbort(
-            `${API_BASE}/search?name=${encodeURIComponent(query)}&limit=8`
-          );
-          return data?.results || [];
-        } catch (error) {
-          if (error.name === 'AbortError') return [];
-          console.error('Search error:', error);
-          return [];
+        const data = await spotifyFetch(`/search?q=${encodeURIComponent(query)}&type=artist&limit=10`);
+        return data.artists.items;
+      }
+
+      /**
+       * Get artist details
+       */
+      async function getArtist(artistId) {
+        return spotifyFetch(`/artists/${artistId}`);
+      }
+
+      /**
+       * Get all albums for an artist with pagination and deduplication
+       */
+      async function getArtistAlbums(artistId, summaryMode = false) {
+        const albums = [];
+        const seen = new Set(); // Dedupe by name+release_date
+        let url = `/artists/${artistId}/albums?include_groups=album,single&limit=50`;
+        let totalFetched = 0;
+        const limit = summaryMode ? CONFIG.SUMMARY_MODE_ALBUM_LIMIT : Infinity;
+
+        while (url && totalFetched < limit) {
+          const data = await spotifyFetch(url);
+          
+          for (const album of data.items) {
+            const key = `${album.name.toLowerCase()}|${album.release_date}`;
+            if (!seen.has(key)) {
+              seen.add(key);
+              albums.push(album);
+            }
+          }
+          
+          totalFetched += data.items.length;
+          url = data.next;
+          
+          if (summaryMode && albums.length >= CONFIG.SUMMARY_MODE_ALBUM_LIMIT) {
+            break;
+          }
         }
+
+        return {
+          albums,
+          isComplete: !url || !summaryMode,
+          totalAvailable: totalFetched
+        };
       }
 
       /**
-       * Fetch artist details
+       * Get tracks for an album
        */
-      async function fetchArtistDetails(artistId) {
-        const response = await fetch(`${API_BASE}/artist?id=${encodeURIComponent(artistId)}`);
-        if (!response.ok) throw new Error('Failed to fetch artist');
-        return response.json();
-      }
+      async function getAlbumTracks(albumId) {
+        const tracks = [];
+        let url = `/albums/${albumId}/tracks?limit=50`;
 
-      /**
-       * Fetch artist top tracks
-       */
-      async function fetchTopTracks(artistId, limit = 3) {
-        try {
-          const response = await fetch(
-            `${API_BASE}/artist_top_tracks?id=${encodeURIComponent(artistId)}&limit=${limit}`
-          );
-          if (!response.ok) return [];
-          const data = await response.json();
-          return data?.top_tracks || [];
-        } catch (error) {
-          console.error('Failed to load top tracks:', error);
-          return [];
+        while (url) {
+          const data = await spotifyFetch(url);
+          tracks.push(...data.items);
+          url = data.next;
         }
+
+        return tracks;
       }
 
       /**
-       * Fetch album tracks
+       * Fetch complete artist stats with progressive updates
        */
-      async function fetchAlbumTracks(albumId) {
-        const response = await fetch(`${API_BASE}/album_tracks?id=${encodeURIComponent(albumId)}`);
-        if (!response.ok) throw new Error('Failed to fetch tracks');
-        return response.json();
-      }
+      async function fetchArtistStats(artistId, onProgress) {
+        // Check cache first
+        if (state.artistCache.has(artistId)) {
+          return state.artistCache.get(artistId);
+        }
 
-      // ==========================================================================
-      // Color Extraction for Dynamic Background
-      // ==========================================================================
+        const stats = {
+          id: artistId,
+          name: '',
+          image: '',
+          followers: 0,
+          popularity: 0,
+          genres: [],
+          albums: 0,
+          songs: 0,
+          ratio: 0,
+          isApproximate: false,
+          isLoading: true,
+          loadingStage: 'artist',
+          error: null
+        };
 
-      /**
-       * Extract dominant color from image
-       */
-      function extractColorFromImage(imageUrl) {
-        return new Promise((resolve) => {
-          if (!imageUrl || imageUrl === PLACEHOLDER_IMAGE) {
-            resolve(null);
-            return;
+        try {
+          // Fetch basic artist info
+          const artist = await getArtist(artistId);
+          stats.name = artist.name;
+          stats.image = artist.images[0]?.url || '';
+          stats.followers = artist.followers.total;
+          stats.popularity = artist.popularity;
+          stats.genres = artist.genres.slice(0, 3);
+          onProgress?.({ ...stats });
+
+          // Check album count to determine mode
+          stats.loadingStage = 'albums';
+          onProgress?.({ ...stats });
+
+          const { albums, isComplete } = await getArtistAlbums(
+            artistId, 
+            false // Start with full fetch attempt
+          );
+
+          stats.albums = albums.length;
+          stats.isApproximate = !isComplete;
+          onProgress?.({ ...stats });
+
+          // Determine if we need summary mode
+          const useSummaryMode = albums.length > CONFIG.MAX_ALBUMS_FULL_FETCH;
+          const albumsToProcess = useSummaryMode 
+            ? albums.slice(0, CONFIG.SUMMARY_MODE_ALBUM_LIMIT)
+            : albums;
+
+          if (useSummaryMode) {
+            stats.isApproximate = true;
           }
 
-          const img = new Image();
-          img.crossOrigin = 'Anonymous';
-          
-          const timeout = setTimeout(() => {
-            resolve(null);
-          }, 5000);
+          // Fetch tracks with concurrency limit
+          stats.loadingStage = 'tracks';
+          const uniqueTracks = new Set();
+          let processedAlbums = 0;
 
-          img.onload = function() {
-            clearTimeout(timeout);
+          const trackTasks = albumsToProcess.map(album => async () => {
             try {
-              const canvas = document.createElement('canvas');
-              const ctx = canvas.getContext('2d');
-              
-              // Use small canvas for performance
-              const size = 50;
-              canvas.width = size;
-              canvas.height = size;
-              ctx.drawImage(img, 0, 0, size, size);
-
-              const imageData = ctx.getImageData(0, 0, size, size);
-              const data = imageData.data;
-              let r = 0, g = 0, b = 0, count = 0;
-
-              // Sample every 4th pixel for performance
-              for (let i = 0; i < data.length; i += 16) {
-                r += data[i];
-                g += data[i + 1];
-                b += data[i + 2];
-                count++;
-              }
-
-              if (count > 0) {
-                resolve({
-                  r: Math.floor(r / count),
-                  g: Math.floor(g / count),
-                  b: Math.floor(b / count)
-                });
-              } else {
-                resolve(null);
-              }
-            } catch (error) {
-              resolve(null);
+              const tracks = await getAlbumTracks(album.id);
+              tracks.forEach(t => uniqueTracks.add(t.id));
+              processedAlbums++;
+              stats.songs = uniqueTracks.size;
+              stats.ratio = stats.albums > 0 
+                ? (stats.songs / stats.albums).toFixed(2) 
+                : 0;
+              stats.loadingProgress = Math.round((processedAlbums / albumsToProcess.length) * 100);
+              onProgress?.({ ...stats });
+            } catch (err) {
+              console.warn(`Failed to fetch tracks for album ${album.id}:`, err);
+              // Continue with partial data
             }
-          };
+          });
 
-          img.onerror = () => {
-            clearTimeout(timeout);
-            resolve(null);
-          };
+          await promiseAllLimit(trackTasks, CONFIG.MAX_CONCURRENT_REQUESTS);
 
-          img.src = imageUrl;
-        });
-      }
+          stats.songs = uniqueTracks.size;
+          stats.ratio = stats.albums > 0 
+            ? parseFloat((stats.songs / stats.albums).toFixed(2))
+            : 0;
+          stats.isLoading = false;
+          stats.loadingStage = 'complete';
 
-      /**
-       * Update page background based on artist image
-       */
-      async function updateBackgroundColor(imageUrl) {
-        const color = await extractColorFromImage(imageUrl);
-        
-        if (color) {
-          const { r, g, b } = color;
-          const darkerR = Math.max(0, r - 40);
-          const darkerG = Math.max(0, g - 40);
-          const darkerB = Math.max(0, b - 40);
-          document.body.style.background = 
-            `linear-gradient(135deg, rgb(${r}, ${g}, ${b}) 0%, rgb(${darkerR}, ${darkerG}, ${darkerB}) 100%)`;
-        } else {
-          document.body.style.background = DEFAULT_GRADIENT;
+          // Cache the result
+          state.artistCache.set(artistId, stats);
+
+          return stats;
+
+        } catch (err) {
+          stats.isLoading = false;
+          stats.error = err.message;
+          
+          if (err.message === 'NO_TOKEN') {
+            showError('No Token', 'Please enter a valid Spotify access token to use this feature.');
+          } else if (err.message === 'TOKEN_EXPIRED') {
+            showError('Token Expired', 'Your Spotify token has expired. Please get a new one from the <a href="https://developer.spotify.com/console/" target="_blank" class="underline">Developer Console</a>.');
+          } else if (err.message.startsWith('RATE_LIMITED')) {
+            const seconds = err.message.split(':')[1];
+            showError('Rate Limited', `Spotify API rate limit reached. Please wait ${seconds} seconds before trying again.`);
+          } else {
+            stats.error = 'partial';
+            stats.isApproximate = true;
+          }
+
+          return stats;
         }
       }
 
-      // ==========================================================================
-      // UI Rendering Functions
-      // ==========================================================================
+      // ============================================================
+      // UI RENDERING
+      // ============================================================
 
-      /**
-       * Show/hide suggestions dropdown
-       */
-      function toggleSuggestions(show) {
-        elements.suggestions.setAttribute('aria-hidden', String(!show));
-        elements.searchInput.setAttribute('aria-expanded', String(show));
-        elements.suggestions.style.display = show ? 'block' : 'none';
-      }
-
-      /**
-       * Render search suggestions
-       */
-      function renderSuggestions(artists) {
-        if (!artists || artists.length === 0) {
-          toggleSuggestions(false);
+      function renderSearchResults(artists) {
+        if (artists.length === 0) {
+          elements.resultsList.innerHTML = `
+            <div class="text-center text-gray-500 py-4">No artists found</div>
+          `;
+          elements.searchResults.classList.remove('hidden');
           return;
         }
 
-        const fragment = document.createDocumentFragment();
-
-        artists.forEach((artist, index) => {
-          const item = document.createElement('div');
-          item.className = 'suggestion-item';
-          item.setAttribute('role', 'option');
-          item.setAttribute('tabindex', '0');
-          item.setAttribute('data-artist-id', artist.id || '');
-          item.setAttribute('data-artist-image', artist.image || '');
-          item.setAttribute('data-artist-name', artist.name || '');
-
-          const genres = (artist.genres || []).slice(0, 2).join(', ') || 'Unknown genre';
-          const followers = formatNumber(artist.followers);
-
-          item.innerHTML = `
+        elements.resultsList.innerHTML = artists.map(artist => `
+          <div class="acc-search-result flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-colors" 
+               role="listitem"
+               tabindex="0"
+               data-artist-id="${artist.id}"
+               data-artist-name="${artist.name}">
             <img 
-              src="${getImageUrl(artist.image)}" 
-              alt="" 
-              loading="lazy"
-              onerror="this.src='${PLACEHOLDER_IMAGE}'"
+              src="${artist.images[2]?.url || artist.images[0]?.url || 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23374151%22 width=%22100%22 height=%22100%22/><text x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%239ca3af%22 font-size=%2240%22>🎤</text></svg>'}" 
+              alt="${artist.name}"
+              class="w-12 h-12 rounded-full object-cover bg-gray-700"
             >
-            <div class="suggestion-info">
-              <strong>${escapeHtml(artist.name)}</strong>
-              <small>${escapeHtml(genres)} • ${followers} followers</small>
-            </div>
-          `;
-
-          fragment.appendChild(item);
-        });
-
-        elements.suggestions.innerHTML = '';
-        elements.suggestions.appendChild(fragment);
-        toggleSuggestions(true);
-      }
-
-      /**
-       * Render artist details
-       */
-      function renderArtistDetails(artist, topTracks, mainImage) {
-        const genres = (artist.genres || []).slice(0, 4);
-        
-        let html = `
-          <article class="artist-header">
-            <div class="artist-main">
-              <img 
-                src="${getImageUrl(mainImage)}" 
-                alt="${escapeHtml(artist.name)}" 
-                class="artist-image"
-                onerror="this.src='${PLACEHOLDER_IMAGE}'"
-              >
-              <div class="artist-info">
-                <h3>${escapeHtml(artist.name)}</h3>
-                <div class="artist-stats">
-                  <div class="stat-item">
-                    <span class="stat-icon" aria-hidden="true">👥</span>
-                    <span>${formatNumber(artist.followers)} followers</span>
-                  </div>
-                </div>
-                ${genres.length > 0 ? `
-                  <div class="genres" aria-label="Genres">
-                    ${genres.map(g => `<span class="genre-tag">${escapeHtml(g)}</span>`).join('')}
-                  </div>
-                ` : ''}
+            <div class="flex-1 min-w-0">
+              <div class="font-medium truncate">${artist.name}</div>
+              <div class="text-xs text-gray-400">${formatNumber(artist.followers.total)} followers</div>
+              <div class="flex flex-wrap gap-1 mt-1">
+                ${artist.genres.slice(0, 2).map(g => `<span class="acc-genre-tag">${g}</span>`).join('')}
               </div>
             </div>
-          </article>
-        `;
+            <button 
+              class="acc-btn-primary px-3 py-1 rounded-lg text-sm font-medium"
+              aria-label="Add ${artist.name} to comparison"
+              data-add-artist="${artist.id}"
+            >
+              + Add
+            </button>
+          </div>
+        `).join('');
 
-        if (topTracks && topTracks.length > 0) {
-          html += `
-            <section class="top-tracks" aria-label="Top tracks">
-              <h4>🔥 Top ${topTracks.length} Tracks</h4>
-              <ol>
-                ${topTracks.map(track => `
-                  <li>
-                    <span>${escapeHtml(track.name)}</span>
-                    <small style="margin-left: auto; color: #999;">
-                      ${formatDuration(track.duration_ms)}
-                    </small>
-                  </li>
-                `).join('')}
-              </ol>
-            </section>
-          `;
-        }
+        elements.searchResults.classList.remove('hidden');
+      }
 
-        if (artist.albums && artist.albums.length > 0) {
-          html += `
-            <h2 class="section-title">💿 Albums (${artist.albums.length})</h2>
-            <section class="albums-grid" aria-label="Albums">
-              ${artist.albums.map(album => `
-                <button 
-                  type="button"
-                  class="album-card" 
-                  data-album-id="${escapeHtml(album.id)}"
-                  data-album-name="${escapeHtml(album.name)}"
-                  data-album-image="${getImageUrl(album.image)}"
-                  data-album-date="${escapeHtml(album.release_date || 'Unknown')}"
-                  data-album-tracks="${album.total_tracks || 0}"
-                  aria-label="View ${escapeHtml(album.name)} album details"
+      function renderCard(stats) {
+        const existingCard = document.querySelector(`[data-card-id="${stats.id}"]`);
+        
+        const cardHtml = `
+          <div 
+            class="acc-card ${stats.isApproximate ? 'acc-approximate' : ''} flex-shrink-0 w-72 rounded-xl p-4 relative"
+            data-card-id="${stats.id}"
+            role="article"
+            aria-label="Artist card for ${stats.name}"
+          >
+            ${stats.isApproximate ? `
+              <div class="absolute top-2 right-2 bg-amber-500/20 text-amber-400 text-xs px-2 py-0.5 rounded-full" title="Some data is approximate">
+                ≈ Approx
+              </div>
+            ` : ''}
+            
+            <button 
+              class="absolute top-2 ${stats.isApproximate ? 'right-20' : 'right-2'} text-gray-400 hover:text-red-400 transition-colors p-1"
+              aria-label="Remove ${stats.name}"
+              data-remove-artist="${stats.id}"
+            >
+              ✕
+            </button>
+
+            <!-- Artist Image -->
+            <div class="flex justify-center mb-4">
+              ${stats.image ? `
+                <img 
+                  src="${stats.image}" 
+                  alt="${stats.name}"
+                  class="acc-card-image w-28 h-28 rounded-full object-cover"
                 >
-                  <div class="album-header">
-                    <img 
-                      src="${getImageUrl(album.image)}" 
-                      class="album-image" 
-                      alt=""
-                      loading="lazy"
-                      onerror="this.src='${PLACEHOLDER_IMAGE}'"
-                    >
-                    <div class="album-info">
-                      <strong>${escapeHtml(album.name)}</strong>
-                      <div class="album-meta">
-                        <span>📅 ${escapeHtml(album.release_date || 'Unknown')}</span>
-                        <span>🎵 ${album.total_tracks || 0} tracks</span>
-                      </div>
-                    </div>
-                  </div>
-                </button>
-              `).join('')}
-            </section>
-          `;
+              ` : `
+                <div class="acc-card-image w-28 h-28 rounded-full bg-gray-700 flex items-center justify-center text-4xl">
+                  🎤
+                </div>
+              `}
+            </div>
+
+            <!-- Artist Name -->
+            <h3 class="text-xl font-bold text-center mb-4 truncate" title="${stats.name}">
+              ${stats.name || 'Loading...'}
+            </h3>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-2 gap-3 mb-4">
+              <div class="text-center">
+                <div class="acc-stat-label">Followers</div>
+                <div class="acc-stat-value">${stats.isLoading && stats.loadingStage === 'artist' ? '...' : formatNumber(stats.followers)}</div>
+              </div>
+              <div class="text-center">
+                <div class="acc-stat-label">Albums</div>
+                <div class="acc-stat-value">
+                  ${stats.isLoading && ['artist', 'albums'].includes(stats.loadingStage) 
+                    ? '<span class="acc-loading-spinner inline-block w-4 h-4 rounded-full"></span>' 
+                    : stats.albums}
+                </div>
+              </div>
+              <div class="text-center">
+                <div class="acc-stat-label">Songs</div>
+                <div class="acc-stat-value">
+                  ${stats.isLoading && stats.loadingStage === 'tracks' 
+                    ? `<span class="text-sm">${stats.songs || 0}</span><span class="text-xs text-gray-400 ml-1">${stats.loadingProgress || 0}%</span>` 
+                    : stats.songs}
+                </div>
+              </div>
+              <div class="text-center">
+                <div class="acc-stat-label">Songs/Album</div>
+                <div class="acc-stat-value">${stats.ratio || '-'}</div>
+              </div>
+            </div>
+
+            <!-- Genres -->
+            <div class="flex flex-wrap justify-center gap-1 mb-4 min-h-[24px]">
+              ${stats.genres.map(g => `<span class="acc-genre-tag">${g}</span>`).join('') || '<span class="text-gray-500 text-xs">No genres</span>'}
+            </div>
+
+            <!-- Popularity -->
+            <div class="mt-auto">
+              <div class="flex justify-between items-center mb-1">
+                <span class="acc-stat-label">Popularity</span>
+                <span class="font-bold ${stats.popularity >= 70 ? 'text-green-400' : stats.popularity >= 40 ? 'text-yellow-400' : 'text-red-400'}">
+                  ${stats.popularity}
+                </span>
+              </div>
+              <div class="h-2 bg-gray-700 rounded-full overflow-hidden">
+                <div 
+                  class="acc-popularity-bar h-full rounded-full transition-all duration-500"
+                  style="width: ${stats.popularity}%"
+                ></div>
+              </div>
+            </div>
+
+            ${stats.error === 'partial' ? `
+              <button 
+                class="w-full mt-3 text-xs text-amber-400 hover:text-amber-300 underline"
+                data-retry-artist="${stats.id}"
+              >
+                Retry loading full data
+              </button>
+            ` : ''}
+          </div>
+        `;
+
+        if (existingCard) {
+          existingCard.outerHTML = cardHtml;
+        } else {
+          elements.emptyState.classList.add('hidden');
+          elements.tray.insertAdjacentHTML('beforeend', cardHtml);
         }
 
-        elements.results.innerHTML = html;
+        updateCardCount();
+      }
 
-        // Attach event listeners to album cards
-        elements.results.querySelectorAll('.album-card').forEach(card => {
-          card.addEventListener('click', handleAlbumClick);
+      function renderSkeletonCard(artistId) {
+        const html = `
+          <div 
+            class="acc-card flex-shrink-0 w-72 rounded-xl p-4"
+            data-card-id="${artistId}"
+          >
+            <div class="flex justify-center mb-4">
+              <div class="acc-skeleton w-28 h-28 rounded-full"></div>
+            </div>
+            <div class="acc-skeleton h-6 w-3/4 mx-auto rounded mb-4"></div>
+            <div class="grid grid-cols-2 gap-3 mb-4">
+              <div class="acc-skeleton h-12 rounded"></div>
+              <div class="acc-skeleton h-12 rounded"></div>
+              <div class="acc-skeleton h-12 rounded"></div>
+              <div class="acc-skeleton h-12 rounded"></div>
+            </div>
+            <div class="acc-skeleton h-4 w-1/2 mx-auto rounded mb-4"></div>
+            <div class="acc-skeleton h-6 rounded"></div>
+          </div>
+        `;
+        elements.emptyState.classList.add('hidden');
+        elements.tray.insertAdjacentHTML('beforeend', html);
+      }
+
+      function removeCard(artistId) {
+        const card = document.querySelector(`[data-card-id="${artistId}"]`);
+        if (card) {
+          card.remove();
+        }
+        state.artistIds = state.artistIds.filter(id => id !== artistId);
+        saveArtistIds();
+        updateCardCount();
+
+        if (state.artistIds.length === 0) {
+          elements.emptyState.classList.remove('hidden');
+        }
+      }
+
+      function updateCardCount() {
+        const count = state.artistIds.length;
+        elements.cardCount.textContent = count > 0 
+          ? `${count} artist${count !== 1 ? 's' : ''} in tray` 
+          : '';
+      }
+
+      function sortCards() {
+        const sortBy = elements.sortSelect.value;
+        const cards = Array.from(elements.tray.querySelectorAll('.acc-card'));
+        
+        cards.sort((a, b) => {
+          const aId = a.dataset.cardId;
+          const bId = b.dataset.cardId;
+          const aStats = state.artistCache.get(aId) || {};
+          const bStats = state.artistCache.get(bId) || {};
+
+          switch (sortBy) {
+            case 'followers':
+              return (bStats.followers || 0) - (aStats.followers || 0);
+            case 'popularity':
+              return (bStats.popularity || 0) - (aStats.popularity || 0);
+            case 'albums':
+              return (bStats.albums || 0) - (aStats.albums || 0);
+            case 'songs':
+              return (bStats.songs || 0) - (aStats.songs || 0);
+            case 'ratio':
+              return (bStats.ratio || 0) - (aStats.ratio || 0);
+            default:
+              return 0;
+          }
         });
+
+        // Reorder DOM
+        cards.forEach(card => elements.tray.appendChild(card));
+        
+        // Update artistIds order
+        state.artistIds = cards.map(c => c.dataset.cardId);
+        saveArtistIds();
       }
 
-      /**
-       * Show loading state
-       */
-      function showLoading(message = 'Loading...') {
-        elements.results.innerHTML = `
-          <div class="loading" role="status" aria-live="polite">
-            <div class="spinner" aria-hidden="true"></div>
-            ${escapeHtml(message)}
-          </div>
-        `;
+      function clearAllCards() {
+        if (!confirm('Remove all artists from the comparison tray?')) return;
+        
+        elements.tray.querySelectorAll('.acc-card').forEach(card => card.remove());
+        state.artistIds = [];
+        state.artistCache.clear();
+        saveArtistIds();
+        updateCardCount();
+        elements.emptyState.classList.remove('hidden');
       }
 
-      /**
-       * Show error state
-       */
-      function showError(message) {
-        elements.results.innerHTML = `
-          <div class="loading" role="alert">${escapeHtml(message)}</div>
-        `;
+      // ============================================================
+      // PERSISTENCE
+      // ============================================================
+
+      function saveArtistIds() {
+        localStorage.setItem(CONFIG.STORAGE_KEY_ARTISTS, JSON.stringify(state.artistIds));
       }
 
-      // ==========================================================================
-      // Modal Functions
-      // ==========================================================================
-
-      /**
-       * Open album modal
-       */
-      async function openAlbumModal(albumId, albumName, albumImage, releaseDate, totalTracks) {
-        // Set modal content
-        elements.modalAlbumImage.src = getImageUrl(albumImage);
-        elements.modalAlbumImage.alt = `${albumName} album cover`;
-        elements.modalAlbumName.textContent = albumName;
-        elements.modalAlbumDate.textContent = `📅 ${releaseDate}`;
-        elements.modalAlbumTracks.textContent = `🎵 ${totalTracks} tracks`;
-
-        // Show loading state
-        elements.modalTracksContent.innerHTML = `
-          <div class="modal-loading" role="status">
-            <div class="modal-spinner" aria-hidden="true"></div>
-            Loading tracks...
-          </div>
-        `;
-
-        // Show modal
-        elements.modal.setAttribute('aria-hidden', 'false');
-        elements.container.classList.add('blurred');
-        document.body.style.overflow = 'hidden';
-
-        // Focus management
-        elements.modalCloseBtn.focus();
-
+      function loadArtistIds() {
         try {
-          const data = await fetchAlbumTracks(albumId);
-
-          if (data.error) {
-            elements.modalTracksContent.innerHTML = `
-              <div class="modal-loading" role="alert">${escapeHtml(data.error)}</div>
-            `;
-            return;
-          }
-
-          const tracks = data.tracks || [];
-          if (tracks.length === 0) {
-            elements.modalTracksContent.innerHTML = `
-              <div class="modal-loading">No tracks found</div>
-            `;
-            return;
-          }
-
-          elements.modalTracksContent.innerHTML = `
-            <h4 class="modal-tracks-title">All Tracks</h4>
-            <ol class="modal-tracks-list">
-              ${tracks.map(track => `
-                <li>
-                  <span class="track-name">${escapeHtml(track.name)}</span>
-                  <span class="track-duration">${formatDuration(track.duration_ms)}</span>
-                </li>
-              `).join('')}
-            </ol>
-          `;
-        } catch (error) {
-          console.error('Error loading tracks:', error);
-          elements.modalTracksContent.innerHTML = `
-            <div class="modal-loading" role="alert">Failed to load tracks</div>
-          `;
+          const stored = localStorage.getItem(CONFIG.STORAGE_KEY_ARTISTS);
+          return stored ? JSON.parse(stored) : [];
+        } catch {
+          return [];
         }
       }
 
-      /**
-       * Close album modal
-       */
-      function closeAlbumModal() {
-        elements.modal.setAttribute('aria-hidden', 'true');
-        elements.container.classList.remove('blurred');
-        document.body.style.overflow = '';
-
-        // Return focus to last focused element
-        elements.searchInput.focus();
+      function saveScrollPosition() {
+        localStorage.setItem(CONFIG.STORAGE_KEY_SCROLL, elements.tray.scrollLeft.toString());
       }
 
-      // ==========================================================================
-      // Event Handlers
-      // ==========================================================================
+      function restoreScrollPosition() {
+        const pos = localStorage.getItem(CONFIG.STORAGE_KEY_SCROLL);
+        if (pos) {
+          elements.tray.scrollLeft = parseInt(pos, 10);
+        }
+      }
 
-      /**
-       * Handle search input
-       */
-      const handleSearchInput = debounce(async function() {
+      // ============================================================
+      // EVENT HANDLERS
+      // ============================================================
+
+      async function handleSearch() {
         const query = elements.searchInput.value.trim();
+        if (!query || state.isSearching) return;
 
-        if (!query || query.length < MIN_SEARCH_LENGTH) {
-          toggleSuggestions(false);
+        if (!getToken()) {
+          showError('No Token', 'Please enter a Spotify access token first.');
+          elements.tokenInput.focus();
           return;
         }
 
-        const results = await searchArtists(query);
-        renderSuggestions(results);
-      }, DEBOUNCE_DELAY);
-
-      /**
-       * Handle suggestion click
-       */
-      async function handleSuggestionClick(event) {
-        const item = event.target.closest('.suggestion-item');
-        if (!item) return;
-
-        const artistId = item.dataset.artistId;
-        const artistImage = item.dataset.artistImage;
-        const artistName = item.dataset.artistName;
-
-        if (!artistId) return;
-
-        elements.searchInput.value = artistName;
-        toggleSuggestions(false);
-
-        showLoading('Loading artist information...');
+        state.isSearching = true;
+        elements.searchIcon.textContent = '⏳';
+        elements.searchBtn.disabled = true;
 
         try {
-          const [artistData, topTracks] = await Promise.all([
-            fetchArtistDetails(artistId),
-            fetchTopTracks(artistId, 3)
-          ]);
+          const artists = await searchArtists(query);
+          renderSearchResults(artists);
+        } catch (err) {
+          if (err.message === 'NO_TOKEN') {
+            showError('No Token', 'Please enter a valid Spotify access token.');
+          } else if (err.message === 'TOKEN_EXPIRED') {
+            showError('Token Expired', 'Your token has expired. Please get a new one.');
+          } else {
+            showError('Search Failed', 'Could not search artists. Please try again.');
+          }
+          elements.searchResults.classList.add('hidden');
+        } finally {
+          state.isSearching = false;
+          elements.searchIcon.textContent = '🔍';
+          elements.searchBtn.disabled = false;
+        }
+      }
 
-          if (artistData.error) {
-            showError(artistData.error);
-            return;
+      async function addArtist(artistId) {
+        // Prevent duplicates
+        if (state.artistIds.includes(artistId)) {
+          const card = document.querySelector(`[data-card-id="${artistId}"]`);
+          card?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
+          return;
+        }
+
+        state.artistIds.push(artistId);
+        saveArtistIds();
+        
+        // Show skeleton immediately
+        renderSkeletonCard(artistId);
+
+        // Fetch and update progressively
+        const stats = await fetchArtistStats(artistId, (progress) => {
+          renderCard(progress);
+        });
+
+        renderCard(stats);
+      }
+
+      async function retryArtist(artistId) {
+        // Remove from cache to force refetch
+        state.artistCache.delete(artistId);
+        
+        const stats = await fetchArtistStats(artistId, (progress) => {
+          renderCard(progress);
+        });
+        
+        renderCard(stats);
+      }
+
+      // ============================================================
+      // INITIALIZATION
+      // ============================================================
+
+      function setupEventListeners() {
+        // Token
+        elements.tokenSave.addEventListener('click', () => {
+          const token = elements.tokenInput.value.trim();
+          if (token && token !== '••••••••••••••••') {
+            saveToken(token);
+            elements.tokenInput.value = '••••••••••••••••';
+          }
+        });
+
+        elements.tokenInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            elements.tokenSave.click();
+          }
+        });
+
+        // Search
+        elements.searchBtn.addEventListener('click', handleSearch);
+        elements.searchInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            handleSearch();
+          }
+        });
+
+        // Search results (delegated)
+        elements.resultsList.addEventListener('click', (e) => {
+          const addBtn = e.target.closest('[data-add-artist]');
+          if (addBtn) {
+            const artistId = addBtn.dataset.addArtist;
+            addArtist(artistId);
+            elements.searchResults.classList.add('hidden');
+            elements.searchInput.value = '';
+          }
+        });
+
+        elements.resultsList.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            const result = e.target.closest('.acc-search-result');
+            if (result) {
+              const artistId = result.dataset.artistId;
+              addArtist(artistId);
+              elements.searchResults.classList.add('hidden');
+              elements.searchInput.value = '';
+            }
+          }
+        });
+
+        // Tray events (delegated)
+        elements.tray.addEventListener('click', (e) => {
+          const removeBtn = e.target.closest('[data-remove-artist]');
+          if (removeBtn) {
+            removeCard(removeBtn.dataset.removeArtist);
           }
 
-          const mainImage = artistData.images?.[0]?.url || artistImage;
-          
-          if (mainImage) {
-            updateBackgroundColor(mainImage);
+          const retryBtn = e.target.closest('[data-retry-artist]');
+          if (retryBtn) {
+            retryArtist(retryBtn.dataset.retryArtist);
           }
+        });
 
-          renderArtistDetails(artistData, topTracks, mainImage);
-        } catch (error) {
-          console.error('Error:', error);
-          showError('Failed to load artist information');
-        }
+        // Sort & Clear
+        elements.sortBtn.addEventListener('click', sortCards);
+        elements.clearBtn.addEventListener('click', clearAllCards);
+
+        // Error banner
+        elements.errorDismiss.addEventListener('click', hideError);
+
+        // Save scroll position
+        elements.tray.addEventListener('scroll', debounce(saveScrollPosition, 200));
+
+        // Save scroll on unload
+        window.addEventListener('beforeunload', saveScrollPosition);
       }
 
-      /**
-       * Handle album card click
+      async function restoreState() {
+        loadToken();
+        
+        const artistIds = loadArtistIds();
+        if (artistIds.length === 0) return;
+
+        elements.emptyState.classList.add('hidden');
+
+        // Restore cards progressively
+        for (const artistId of artistIds) {
+          state.artistIds.push(artistId);
+          renderSkeletonCard(artistId);
+        }
+
+        updateCardCount();
+
+        // Fetch data with some delay between to avoid rate limits
+        for (const artistId of artistIds) {
+          if (getToken()) {
+            const stats = await fetchArtistStats(artistId, (progress) => {
+              renderCard(progress);
+            });
+            renderCard(stats);
+          } else {
+            // Show placeholder if no token
+            renderCard({
+              id: artistId,
+              name: 'Token Required',
+              image: '',
+              followers: 0,
+              popularity: 0,
+              genres: [],
+              albums: 0,
+              songs: 0,
+              ratio: 0,
+              isLoading: false,
+              error: 'no_token'
+            });
+          }
+        }
+
+        // Restore scroll position after cards are rendered
+        setTimeout(restoreScrollPosition, 100);
+      }
+
+      function init() {
+        console.log('%c🎵 Artist Comparison Cards', 'font-size: 20px; font-weight: bold; color: #e94560;');
+        console.log('%c⚠️ Security Note: Never commit real tokens. Use a backend proxy in production.', 'color: #f59e0b;');
+        console.log('%c📊 Rate Limits: Spotify allows ~180 requests/min. This tool limits concurrency to avoid hitting limits.', 'color: #6bcb77;');
+
+        setupEventListeners();
+        restoreState();
+      }
+
+      // Start when DOM is ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+
+      /*
+       * ============================================================
+       * MANUAL TESTING CHECKLIST
+       * ============================================================
+       * 
+       * 1. Token Validation:
+       *    - Clear localStorage and refresh
+       *    - Try searching without a token → verify error banner appears
+       *    - Paste an invalid token → search → verify "Token Expired" error
+       *    - Paste a valid token → verify "Token saved" appears
+       * 
+       * 2. Search & Add:
+       *    - Search for "Adele" → verify results appear with images and followers
+       *    - Click "+ Add" → verify card appears with skeleton then loads data
+       *    - Search for "Taylor Swift" and add → verify second card appears
+       *    - Try adding the same artist twice → verify no duplicate, scrolls to existing
+       * 
+       * 3. Card Data:
+       *    - Verify followers are formatted (e.g., "85.2M" not "85200000")
+       *    - Verify albums, songs, and ratio load progressively
+       *    - Verify popularity bar matches the number
+       *    - Verify up to 3 genres are shown
+       * 
+       * 4. Sorting:
+       *    - Add 3+ artists
+       *    - Select "Popularity" from dropdown and click Sort → verify order changes
+       *    - Try other sort options → verify correct ordering
+       * 
+       * 5. Persistence:
+       *    - Add some artists, then refresh the page
+       *    - Verify artists are restored and data reloads
+       *    - Scroll the tray, refresh → verify scroll position is restored
+       * 
+       * 6. Remove & Clear:
+       *    - Click ✕ on a card → verify it's removed
+       *    - Click "Clear All" → confirm → verify all cards removed
+       *    - Refresh → verify tray is empty
+       * 
+       * 7. Large Discography (Summary Mode):
+       *    - Search for an artist with many albums (e.g., "Various Artists" or "Elvis")
+       *    - Verify "≈ Approx" badge appears if summary mode is used
+       *    - Verify data still loads without freezing the UI
+       * 
+       * 8. Error Handling:
+       *    - Disconnect internet mid-fetch → verify partial state shown
+       *    - Verify "Retry" button appears for failed cards
+       *    - Wait for token to expire → verify clear error message
+       * 
+       * 9. Accessibility:
+       *    - Tab through controls → verify focus is visible
+       *    - Press Enter on search input → verify search triggers
+       *    - Use keyboard to navigate search results
+       * 
+       * 10. Responsive:
+       *     - Resize to mobile width → verify tray scrolls horizontally
+       *     - Verify cards maintain readable size
+       *     - Verify controls wrap appropriately
+       * 
+       * ============================================================
        */
-      function handleAlbumClick(event) {
-        const card = event.currentTarget;
-        openAlbumModal(
-          card.dataset.albumId,
-          card.dataset.albumName,
-          card.dataset.albumImage,
-          card.dataset.albumDate,
-          card.dataset.albumTracks
-        );
-      }
-
-      /**
-       * Handle keyboard navigation in suggestions
-       */
-      function handleSuggestionKeydown(event) {
-        const items = elements.suggestions.querySelectorAll('.suggestion-item');
-        const currentIndex = Array.from(items).indexOf(document.activeElement);
-
-        switch (event.key) {
-          case 'ArrowDown':
-            event.preventDefault();
-            if (currentIndex < items.length - 1) {
-              items[currentIndex + 1].focus();
-            }
-            break;
-          case 'ArrowUp':
-            event.preventDefault();
-            if (currentIndex > 0) {
-              items[currentIndex - 1].focus();
-            } else {
-              elements.searchInput.focus();
-            }
-            break;
-          case 'Enter':
-          case ' ':
-            event.preventDefault();
-            handleSuggestionClick(event);
-            break;
-          case 'Escape':
-            toggleSuggestions(false);
-            elements.searchInput.focus();
-            break;
-        }
-      }
-
-      // ==========================================================================
-      // Event Listeners Setup
-      // ==========================================================================
-
-      // Search input events
-      elements.searchInput.addEventListener('input', handleSearchInput);
-      elements.searchInput.addEventListener('keydown', (event) => {
-        if (event.key === 'ArrowDown') {
-          event.preventDefault();
-          const firstItem = elements.suggestions.querySelector('.suggestion-item');
-          if (firstItem) firstItem.focus();
-        }
-        if (event.key === 'Escape') {
-          toggleSuggestions(false);
-        }
-      });
-
-      // Suggestions events
-      elements.suggestions.addEventListener('click', handleSuggestionClick);
-      elements.suggestions.addEventListener('keydown', handleSuggestionKeydown);
-
-      // Modal events
-      elements.modalCloseBtn.addEventListener('click', closeAlbumModal);
-      elements.modal.addEventListener('click', (event) => {
-        if (event.target === elements.modal) {
-          closeAlbumModal();
-        }
-      });
-
-      // Global keyboard events
-      document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && elements.modal.getAttribute('aria-hidden') === 'false') {
-          closeAlbumModal();
-        }
-      });
-
-      // Close suggestions when clicking outside
-      document.addEventListener('click', (event) => {
-        if (!elements.suggestions.contains(event.target) && event.target !== elements.searchInput) {
-          toggleSuggestions(false);
-        }
-      });
-
-      // Handle image errors globally
-      document.addEventListener('error', (event) => {
-        if (event.target.tagName === 'IMG') {
-          handleImageError(event);
-        }
-      }, true);
 
     })();
   </script>
